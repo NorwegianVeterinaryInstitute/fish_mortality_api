@@ -18,10 +18,6 @@ library(ggplot2)
 #* @apiVersion 0.0.3
 #* @apiTag Fish
 
-#* @get /
-function() {
-}
-
 #* Hello World
 #* @get /hello
 function() {
