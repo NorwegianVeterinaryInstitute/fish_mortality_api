@@ -38,17 +38,20 @@ function() {
 
 function(zone = "PO 3") {
   
+  # evaluate the arguments
+  .zone <- zone
+  
   fm_board <- board_connect()
   
   dat <- pin_read(fm_board, "vi2451/mortality_rates_monthly_data") 
   
-  if (zone == "all") {
+  if (.zone == "all") {
     
     dat
   }
   
   dat |> 
-    filter(sone == zone | sone == "Norge") #Norway is always part of the data
+    filter(sone == .zone | sone == "Norge") #Norway is always part of the data
     
   
 }
@@ -85,24 +88,30 @@ function(legend_name = "PA 3") {
 #### LOSSES DATA ####
 
 #* Zone Losses Yearly
-#* @param year The year, 2019-2022 are available. "All" for all data.
-#* @param viz The level at which the data is plotted: "fylke" or "zone".
-#* @param species Fish species: "salmon" is available.
+#* @param year:string The year, 2019-2022 are available. "All" for all data.
+#* @param viz:string The level at which the data is plotted: "fylke" or "zone".
+#* @param species:string Fish species: "salmon" is available.
 #* @post /zone_losses
 
 function(year = "2022",
          viz = "zone",
          species = "salmon") {
+  
+  # evaluate the arguments
+  .year <- year
+  .viz <- viz
+  .species <- species
+  
   fm_board <- board_connect()
   
   dat <- pin_read(fm_board, "vi2451/losses_yearly")
   
-  if (year == "All") {
+  if (.year == "All") {
     dat
   }
   
   dat |>
-    filter(year == year, viz == viz, species == species)
+    filter(year == .year, viz == .viz, species == .species)
   
   
 }
@@ -129,31 +138,39 @@ function() {
 
 
 
-#* Zone Mortality Yearly
-#* Years 2018-2022 are served.
-#* @param viz The level at which the data is plotted: "fylke" or "zone". 
-#* "All" for all data
-#* @param species Fish species: "salmon" is available.
-#* @post /zone_mortality
+# Zone Mortality Yearly
+# Years 2018-2022 are served.
+# @param viz The level at which the data is plotted: "fylke" or "zone". 
+# "All" for all data
+# @param species Fish species: "salmon" is available.
+# @post /zone_mortality
 
-function(viz = "zone",
-         species = "salmon") {
-  
-  fm_board <- board_connect()
-  
-  dat <- pin_read(fm_board, "vi2451/losses_yearly_mortality") 
-  
-  if (viz == "All"){
-    dat
-  }
-  
-  dat|>
-    filter(viz == viz, species == species)
-  
-  
-}
+# function(viz = "zone",
+#          species = "salmon") {
+#   
+#   
+#   # evaluate the arguments
+#   .viz <- viz
+#   .species <- species
+#   
+#   fm_board <- board_connect()
+#   
+#   dat <- pin_read(fm_board, "vi2451/losses_yearly_mortality") 
+#   
+#   if (.viz == "All"){
+#     dat
+#   }
+#   
+#   dat|>
+#     filter(viz == .viz, species == .species)
+#   
+#   
+# }
 
 #* Zone Mortality Example Plot
+#* Please note: this plot is being build with the same dataset as
+#* above - zone_losses, thus another endpoint is not needed. The previous
+#* endpoint served the pivoted data for the example plot.
 #* @serializer png
 #* @get /zone_mortality_plot
 function() {
