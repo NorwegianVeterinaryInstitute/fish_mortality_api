@@ -104,7 +104,7 @@ function(year = "2022",
   
   fm_board <- board_connect()
   
-  dat <- pin_read(fm_board, "vi2451/losses_yearly")
+  dat <- pin_read(fm_board, "vi2451/losses_yearly_data")
   
   if (.year == "All") {
     dat
@@ -122,7 +122,7 @@ function(year = "2022",
 #* @get /zone_losses_yearly_plot
 function() {
   fm_board <- board_connect()
-  dat <- pin_read(fm_board, "vi2451/losses_yearly") |>
+  dat <- pin_read(fm_board, "vi2451/losses_yearly_data") |>
     filter(year == "2022", viz == "zone", species == "salmon")
   
   myPallete <- c('#8dd3c7', '#ffffb3','#bebada','#fb8072')
@@ -175,7 +175,7 @@ function() {
 #* @get /zone_mortality_plot
 function() {
   fm_board <- board_connect()
-  dat <- pin_read(fm_board, "vi2451/losses_yearly_mortality") |>
+  dat <- pin_read(fm_board, "vi2451/losses_yearly_mortality_data") |>
     filter(viz == "zone", species == "salmon")
   
   p <- ggplot(dat, aes(x = area)) +
