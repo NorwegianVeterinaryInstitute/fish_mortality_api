@@ -30,29 +30,32 @@ function() {
 
 #* Mortality Rates
 #* @param zone A string that identifies the zone
-#* Could be any of: "All", "PO 1 & 2", "PO 3",  "PO 4", "PO 5",
-#* "PO 6", "PO 7", "PO 8", "PO 9", "PO 10", "PO 11", "PO 12 & 13".
-#* When selecting a single PO, Norway is always included as a whole for 
+#* Could be any of: "All", "1 & 2", "3",  "4", "5",
+#* "6", "7", "8", "9", "10", "11", "12 & 13".
+#* When selecting a single production zone, Norway is always included as a whole for 
 #* comparison.
 #* @post /mortality_rates
 
-function(zone = "PO 3") {
+function(zone = "3") {
   
   # evaluate the arguments
   .zone <- zone
   
   fm_board <- board_connect()
   
-  dat <- pin_read(fm_board, "vi2451/mortality_rates_monthly_data") 
+  dat <- pin_read(fm_board, "vi2451/mortality_rates_monthly_data")
   
-  if (.zone == "all") {
+  if (.zone == "All") {
+    dat <- dat |>
+      filter(viz %in% c("zone",  "all")) #Norway is always part of the data
     
-    dat
+  } else {
+    dat <- dat |>
+      filter(area == .zone |
+               area == "Norge") #Norway is always part of the data
   }
   
-  dat |> 
-    filter(sone == .zone | sone == "Norge") #Norway is always part of the data
-    
+  dat
   
 }
 
