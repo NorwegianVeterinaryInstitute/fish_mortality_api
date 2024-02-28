@@ -12,10 +12,9 @@ library(pins)
 library(dplyr)
 library(ggplot2)
 
-
 #* @apiTitle Fish Mortality API
 #* @apiDescription Plumber API for serving fish mortality data.
-#* @apiVersion 0.0.3
+#* @apiVersion 0.0.5
 #* @apiTag Fish
 
 #* Hello World
@@ -25,16 +24,152 @@ function() {
     
 }
 
+#### YEARLY DATA ####
+
+#### LOSSES AND MORTALITY DATA ####
+
+#* Losses and Mortality Yearly
+#* @param year:string The years 2019-2023 are available. Use "All" to get all data in which case the other arguments are ignored.
+#* @param viz:string The level at which the data is plotted: "fylke" or "zone".
+#* @param species:string Fish species: "salmon" and "rainbowtrout".
+#* @serializer json
+#* @post /losses_mortality_yearly
+
+function(year = "2022",
+         viz = "zone",
+         species = "salmon") {
+  
+  # evaluate the arguments
+  .year <- year
+  .viz <- viz
+  .species <- species
+  
+  fm_board <- board_connect()
+  
+  dat <- pin_read(fm_board, "vi2451/losses_yearly_data")
+  
+  if (.year == "All") {
+    dat
+  } else {
+    dat |>
+      filter(year == .year, viz == .viz, species == .species)
+  }
+  
+}
+
+
+#* Zone Losses Yearly Example Plot
+#* @serializer png
+#* @get /zone_losses_yearly_plot
+function() {
+  fm_board <- board_connect()
+  dat <- pin_read(fm_board, "vi2451/losses_yearly_data") |>
+    filter(year == "2022", viz == "zone", species == "salmon")
+  
+  myPallete <- c('#8dd3c7', '#ffffb3','#bebada','#fb8072')
+  
+  p <-  ggplot(dat, aes(x = area, y = n, fill = type)) +
+    geom_bar(stat = "identity", position = "stack") +
+    scale_fill_manual(values = myPallete) +
+    labs(y = "Antall (millioner)", x = "Område", title = "") +
+    theme_minimal()
+  
+  print(p)
+}
+
+#* Zone Mortality Example Plot
+#* Please note: this plot is being build with the same dataset as
+#* above - zone_losses, thus another endpoint is not needed. 
+#* @serializer png
+#* @get /zone_mortality_year_plot
+function() {
+  fm_board <- board_connect()
+  dat <- pin_read(fm_board, "vi2451/mortality_yearly_data") |>
+    filter(viz == "zone", species == "salmon")
+  
+  p <- ggplot(dat, aes(x = area)) +
+    geom_point(aes(y = `2022`, color = "2022"), size = 3) +
+    geom_point(aes(y = `2021`, color = "2021"), size = 3) +
+    geom_point(aes(y = `2020`, color = "2020"), size = 3) +
+    geom_point(aes(y = `2019`, color = "2019"), size = 3) +
+    scale_color_manual(values = c(
+      "2022" = "#253494",
+      "2021" = "#2c7fb8",
+      "2020" = "#41b6c4",
+      "2019" = "#a1dab4"
+    )) +
+    labs(
+      title = "",
+      x = "Område",
+      y = "Dødelighet (%)",
+      color = "År"
+    ) +
+    theme_minimal() +
+    theme(legend.position = "top")
+  
+  print(p)
+}
+
+
+
+#### MONTHLY DATA ####
+
+#### LOSSES ####
+
+#* Zone Losses Monthly
+#* @param year_month:string Months for years 2019-2023 are available.  Use "All" to get all data in which case the other arguments are ignored.
+#* @param viz:string The level at which the data is plotted: "fylke" or "zone".
+#* @param species:string Fish species: "salmon" and "rainbowtrout".
+#* @serializer json
+#* @post /losses_monthly
+
+function(year_month = "2022-03",
+         viz = "zone",
+         species = "salmon") {
+  
+  # evaluate the arguments
+  .year_month <- year_month
+  .viz <- viz
+  .species <- species
+  
+  fm_board <- board_connect()
+  
+  dat <- pin_read(fm_board, "vi2451/losses_monthly_data_wrangled")
+  
+  if (.year_month == "All") {
+    dat
+  } else {
+    dat |>
+      filter(year_month == .year_month, viz == .viz, species == .species)
+  }
+  
+}
+
+
+#* Zone Losses Monthly Example Plot
+#* @serializer png
+#* @get /zone_losses_monthly_plot
+function() {
+  fm_board <- board_connect()
+  dat <- pin_read(fm_board, "vi2451/losses_monthly_data_wrangled") |>
+    filter(year_month == "2022-03", viz == "zone", species == "salmon")
+  
+  myPallete <- c('#8dd3c7', '#ffffb3','#bebada','#fb8072')
+  
+  p <-  ggplot(dat, aes(x = area, y = n, fill = type)) +
+    geom_bar(stat = "identity", position = "stack") +
+    scale_fill_manual(values = myPallete) +
+    labs(y = "Antall (millioner)", x = "Område", title = "") +
+    theme_minimal()
+  
+  print(p)
+}
 
 #### MORTALITY RATES ####
 
 #* Mortality Rates
-#* @param zone A string that identifies the zone
-#* Could be any of: "All", "1 & 2", "3",  "4", "5",
-#* "6", "7", "8", "9", "10", "11", "12 & 13".
-#* When selecting a single production zone, Norway is always included as a whole for 
-#* comparison.
-#* @post /mortality_rates
+#* @param zone:string A string that identifies the zone. Could be any of: "All", "1 & 2", "3", "4", "5","6", "7", "8", "9", "10", "11", "12 & 13".When selecting a single production zone, Norway is always included as a whole for comparison.
+#* @post /mortality_rates_monthly
 
 function(zone = "3") {
   
@@ -62,7 +197,7 @@ function(zone = "3") {
 #* Mortality Rates Example Plot
 #* @serializer png
 #* @param legend_name a string to be used in the legend
-#* @get /mortality_rates_plot
+#* @get /mortality_rates_monthly_plot
 function(legend_name = "PA 3") {
 
   fm_board <- board_connect() 
@@ -88,13 +223,13 @@ function(legend_name = "PA 3") {
     
 }
 
-#### LOSSES DATA ####
+#### COHORTS ####
 
-#* Zone Losses Yearly
-#* @param year:string The year, 2019-2022 are available. "All" for all data.
+#* Cohorts
+#* @param year:string The years 2019-2023 are available. Use "All" to get all data in which case the other arguments are ignored.
+#* @param species:string Fish species: "salmon" is available
 #* @param viz:string The level at which the data is plotted: "fylke" or "zone".
-#* @param species:string Fish species: "salmon" is available.
-#* @post /zone_losses
+#* @post /cohorts
 
 function(year = "2022",
          viz = "zone",
@@ -107,99 +242,37 @@ function(year = "2022",
   
   fm_board <- board_connect()
   
-  dat <- pin_read(fm_board, "vi2451/losses_yearly_data")
+  dat <- pin_read(fm_board, "vi2451/mortality_cohorts_data")
   
   if (.year == "All") {
-    dat
+    dat 
+    
+  } else {
+    dat |>
+      filter(year == .year, viz == .viz, species == .species)
   }
   
-  dat |>
-    filter(year == .year, viz == .viz, species == .species)
-  
+
   
 }
 
 
-#* Zone Losses Yearly Example Plot
+#* Cohorts Example Plot
 #* @serializer png
-#* @get /zone_losses_yearly_plot
+#* @get /cohorts_plot
 function() {
   fm_board <- board_connect()
-  dat <- pin_read(fm_board, "vi2451/losses_yearly_data") |>
+  dat <- pin_read(fm_board, "vi2451/mortality_cohorts_data") |>
     filter(year == "2022", viz == "zone", species == "salmon")
   
-  myPallete <- c('#8dd3c7', '#ffffb3','#bebada','#fb8072')
-  
-  p <-  ggplot(dat, aes(x = area, y = n, fill = type)) +
-    geom_bar(stat = "identity", position = "stack") +
-    scale_fill_manual(values = myPallete) +
-    labs(y = "Antall (millioner)", x = "Område", title = "") +
-    theme_minimal()
-  
-  print(p)
-}
-
-
-
-# Zone Mortality Yearly
-# Years 2018-2022 are served.
-# @param viz The level at which the data is plotted: "fylke" or "zone". 
-# "All" for all data
-# @param species Fish species: "salmon" is available.
-# @post /zone_mortality
-
-# function(viz = "zone",
-#          species = "salmon") {
-#   
-#   
-#   # evaluate the arguments
-#   .viz <- viz
-#   .species <- species
-#   
-#   fm_board <- board_connect()
-#   
-#   dat <- pin_read(fm_board, "vi2451/losses_yearly_mortality") 
-#   
-#   if (.viz == "All"){
-#     dat
-#   }
-#   
-#   dat|>
-#     filter(viz == .viz, species == .species)
-#   
-#   
-# }
-
-#* Zone Mortality Example Plot
-#* Please note: this plot is being build with the same dataset as
-#* above - zone_losses, thus another endpoint is not needed. The previous
-#* endpoint served the pivoted data for the example plot.
-#* @serializer png
-#* @get /zone_mortality_plot
-function() {
-  fm_board <- board_connect()
-  dat <- pin_read(fm_board, "vi2451/losses_yearly_mortality_data") |>
-    filter(viz == "zone", species == "salmon")
-  
-  p <- ggplot(dat, aes(x = area)) +
-    geom_point(aes(y = `2022`, color = "2022"), size = 3) +
-    geom_point(aes(y = `2021`, color = "2021"), size = 3) +
-    geom_point(aes(y = `2020`, color = "2020"), size = 3) +
-    geom_point(aes(y = `2019`, color = "2019"), size = 3) +
-    scale_color_manual(values = c(
-      "2022" = "#253494",
-      "2021" = "#2c7fb8",
-      "2020" = "#41b6c4",
-      "2019" = "#a1dab4"
-    )) +
-    labs(
-      title = "",
-      x = "Område",
-      y = "Dødelighet (%)",
-      color = "År"
-    ) +
-    theme_minimal() +
-    theme(legend.position = "top")
+  p <- ggplot(dat) +
+    geom_segment(
+      aes(color = area, x = area, xend = area, y = q1, yend=q3), size = 10) +
+    geom_point(
+      aes(x = area, y = mort, group = year),
+      pch = 10, size = 9, fill = "black", stroke = 0.2
+    )
+    
   
   print(p)
 }
