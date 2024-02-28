@@ -203,10 +203,10 @@ function(legend_name = "PA 3") {
   fm_board <- board_connect() 
   dat <-
     pin_read(fm_board, "vi2451/mortality_rates_monthly_data") |>
-    filter(sone == "PO 3" |
-             sone == "Norge") #Norway is always part of the data
+    filter(area == "PO 3" |
+             area == "Norge") #Norway is always part of the data
     
-    p <- ggplot(data = dat, aes(x = date, y = median, group = sone, color = sone)) +
+    p <- ggplot(data = dat, aes(x = date, y = median, group = area, color = area)) +
       geom_ribbon(data = dat, aes(ymin = q1, ymax = q3), fill = "#cccccc", color = NA) +
       geom_line(size = 1) +
       scale_color_manual(values = c("#c4796d", "black"), labels = c("Norway", legend_name)) +
