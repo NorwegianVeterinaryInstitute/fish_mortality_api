@@ -29,7 +29,7 @@ function() {
 #### LOSSES AND MORTALITY DATA ####
 
 #* Losses and Mortality Yearly
-#* @param year:string The years 2019-2023 are available. Use "All" to get all data in which case the other arguments are ignored.
+#* @param year:string The years 2019-2023 are available. Use "All" to get all years.
 #* @param viz:string The level at which the data is plotted: "fylke" or "zone".
 #* @param species:string Fish species: "salmon" and "rainbowtrout".
 #* @serializer json
@@ -49,7 +49,8 @@ function(year = "2022",
   dat <- pin_read(fm_board, "vi2451/losses_yearly_data")
   
   if (.year == "All") {
-    dat
+    dat |>
+      filter(viz == .viz, species == .species)
   } else {
     dat |>
       filter(year == .year, viz == .viz, species == .species)
