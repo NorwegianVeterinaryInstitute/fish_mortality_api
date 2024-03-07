@@ -17,6 +17,37 @@ library(ggplot2)
 #* @apiVersion 0.0.5
 #* @apiTag Fish
 
+
+# ===================== CORS SNIPPET =============================
+
+# Enable CORS Filtering
+# https://github.com/rstudio/plumber/issues/66#issuecomment-845739601
+# https://github.com/rstudio/plumber/issues/435
+#' @filter cors
+cors <- function(req, res) {
+  safe_domains <- c("https://www.vetinst.no")
+  
+  if (any(grepl(
+    pattern = paste0(safe_domains, collapse = "|"),
+    req$HTTP_REFERER,
+    ignore.case = T
+  ))) {
+    res$setHeader("Access-Control-Allow-Origin",
+                  sub("/$", "", req$HTTP_REFERER)) #Have to remove last slash, for some reason
+    
+    if (req$REQUEST_METHOD == "OPTIONS") {
+      res$setHeader("Access-Control-Allow-Methods","*")
+      res$setHeader("Access-Control-Allow-Headers", req$HTTP_ACCESS_CONTROL_REQUEST_HEADERS)
+      res$status <- 200 
+      return(list())
+    } else {
+      plumber::forward()
+    } 
+  } else {
+    plumber::forward()
+  }
+}
+
 #* Hello World
 #* @get /hello
 function() {
